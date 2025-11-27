@@ -102,23 +102,108 @@ Create Zod schemas in `src/lib/types/` for your entities:
 ```typescript
 // src/lib/types/your-entity.schemas.ts
 import { z } from 'zod';
+import { uuidSchema } from '$types/common.schemas';
 
 export const yourEntitySchema = z.object({
-	id: z.string().uuid(),
-	name: z.string().min(1).max(255)
+	id: uuidSchema,
+	name: z.string().min(1, { error: 'Name is required' }).max(255)
 	// ... your fields
 });
 
 export type YourEntity = z.infer<typeof yourEntitySchema>;
+
+// Create schema (omit generated fields)
+export const createYourEntitySchema = yourEntitySchema.omit({ id: true });
+export type CreateYourEntity = z.infer<typeof createYourEntitySchema>;
 ```
 
 ### Build Your API
 
-1. **Create API client method** (`src/lib/api/your-entity.ts`)
-2. **Create API endpoint** (`src/routes/api/your-entity/+server.ts`)
-3. **Add validation using Zod schemas**
+1. **Create API client method** (`src/lib/api/your-entity.ts`):
 
-See `docs/API.md` for detailed examples.
+```typescript
+import { apiFetch } from '$api/base';
+import { createYourEntitySchema, type YourEntity } from '$types/your-entity.schemas';
+
+export function createYourEntityApi(fetch: typeof globalThis.fetch) {
+	return {
+		async create(data: unknown): Promise<YourEntity> {
+			const validatedData = createYourEntitySchema.parse(data);
+			return apiFetch<YourEntity>(fetch, '/api/your-entity', {
+				method: 'POST',
+				body: JSON.stringify(validatedData)
+			});
+		}
+	};
+}
+```
+
+2. **Add to main client** (`src/lib/api/client.ts`):
+
+```typescript
+import { createYourEntityApi } from './your-entity';
+
+export function createApiClient(fetch: typeof globalThis.fetch) {
+	return {
+		auth: createAuthApi(fetch),
+		yourEntity: createYourEntityApi(fetch) // Add here
+	};
+}
+```
+
+3. **Create API endpoint** (`src/routes/api/your-entity/+server.ts`):
+
+```typescript
+import { withApiLogging } from '$server/logger/middleware';
+import { ApiError } from '$server/errors';
+import { created } from '$server/responses';
+import { createYourEntitySchema } from '$types/your-entity.schemas';
+
+export async function POST(event) {
+	return withApiLogging(
+		event,
+		async ({ requestId }) => {
+			const body = await event.request.json();
+			const result = createYourEntitySchema.safeParse(body);
+
+			if (!result.success) {
+				return ApiError.fromZod(result.error, requestId);
+			}
+
+			// Create in database
+			const [entity] = await db.insert(yourTable).values(result.data).returning();
+
+			return created(entity);
+		},
+		{ operation: 'CREATE_ENTITY', schema: 'app' }
+	);
+}
+```
+
+### Using Path Aliases
+
+The template includes comprehensive path aliases for clean imports:
+
+```typescript
+// API Client
+import { createApiClient } from '$api/client';
+
+// Types & Schemas
+import type { User } from '$types/auth.schemas';
+import { emailSchema } from '$types/common.schemas';
+
+// Components
+import { Button, Input } from '$components'; // From index
+import Navigation from '$ui/layout/Navigation.svelte'; // Direct import
+
+// Utilities
+import { formatPrice, formatDate } from '$utils';
+
+// Server-only (never in .svelte files)
+import { db } from '$db';
+import { user, session } from '$schema';
+import { ApiError } from '$server/errors';
+```
 
 ### Create UI Components
 

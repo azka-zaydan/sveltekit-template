@@ -8,7 +8,7 @@ npm run migrate:up
 
 echo "✅ Migrations completed successfully"
 
-# Run seeds (mandatory for deployment)
+# Run seeds (optional - comment out if you don't want demo data in production)
 echo "🌱 Seeding database..."
 npm run seed:up
 echo "✅ Database seeded successfully"
