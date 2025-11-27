@@ -1,553 +1,166 @@
-# UI Style Guide - YourApp Retro Aesthetic
+# UI Style Guide
 
-> **Philosophy**: Embrace the legendary retro old-school YourApp vibe - functional, minimal, and timeless. No modern flourishes, just classic web design that works.
+> **See also**: [`COMPONENTS.md`](COMPONENTS.md) for reusable component documentation
 
-## Design Principles
+This document outlines the design system and styling guidelines for the project.
 
-### 1. **Radical Minimalism**
+## Core Philosophy
 
-- No gradients, no shadows (except when absolutely necessary)
-- No fancy animations or transitions
-- Function over form, always
-- If it doesn't serve a purpose, remove it
+**Radical Minimalism**
 
-### 2. **Classic Typography**
+- If it doesn't serve a function, remove it
+- Information density over white space
+- Speed and utility over aesthetics
+- "Ugly" is better than "Slow" or "Confusing"
 
-- Small, readable text (`text-sm` is default)
-- Black text on white background
-- Classic blue links (`text-blue-600 hover:underline`)
-- Purple accents for branding (`purple-700`)
+## Colors
 
-### 3. **Simple Borders**
+### Brand Colors
 
-- Use `border-gray-300` for everything
-- No rounded corners on most elements
-- Minimal `rounded` (not `rounded-lg`) when needed
-- Tables and grids with basic border separators
+- **Primary Purple**: `#4b0082` (Tailwind `purple-700`) - Used for branding, primary actions, and active states.
+- **Link Blue**: `#2563eb` (Tailwind `blue-600`) - Used for ALL hyperlinks.
 
-### 4. **Utilitarian Layout**
+### Semantic Colors
 
-- Dense information display
-- Multi-column layouts on desktop
-- Simple stacked layout on mobile
-- Maximum content, minimum chrome
+- **Success**: `green-700` - Verified, active, success messages
+- **Warning**: `yellow-600` - Pending, caution messages
+- **Danger**: `red-700` - Delete actions, error messages, flagged content
+- **Info**: `blue-700` - Informational badges
 
-## Color Palette
+### Neutrals
 
-### Primary Colors
-
-```css
-/* Purple - Brand color */
-purple-700  (#7e22ce)  - Primary brand color, main headings
-purple-800  (#6b21a8)  - Hover states on purple buttons
-purple-600  (#9333ea)  - Lighter purple accents
-purple-50   (#faf5ff)  - Very light purple backgrounds
-
-/* Blue - Links */
-blue-600    (#2563eb)  - All hyperlinks
-blue-700    (#1d4ed8)  - Visited/active links (optional)
-
-/* Red - Errors & Warnings */
-red-600     (#dc2626)  - Error text
-red-700     (#b91c1c)  - Error button hover
-red-50      (#fef2f2)  - Error backgrounds
-red-500     (#ef4444)  - Error borders
-
-/* Gray - Structure */
-gray-900    (#111827)  - Primary text
-gray-700    (#374151)  - Secondary text
-gray-600    (#4b5563)  - Tertiary text
-gray-400    (#9ca3af)  - Borders (secondary)
-gray-300    (#d1d5db)  - Borders (primary)
-gray-200    (#e5e7eb)  - List separators
-gray-100    (#f3f4f6)  - Subtle backgrounds
-```
-
-### Usage Rules
-
-- **Links**: ALWAYS `text-blue-600 hover:underline`
-- **Borders**: ALWAYS `border-gray-300`
-- **Primary actions**: `bg-purple-700 text-white hover:bg-purple-800`
-- **Errors**: `text-red-600` or `border-red-500`
-- **Body text**: Default black or `text-gray-900`
+- **Text**: `gray-900` (primary), `gray-600` (secondary/metadata)
+- **Borders**: `gray-300` (default), `gray-200` (subtle)
+- **Backgrounds**: `white` (default), `gray-100` (hover states/subtle backgrounds)
 
 ## Typography
 
-### Text Sizes
+### Font Stack
 
-```css
-text-3xl    - Main page title (craigslist logo)
-text-2xl    - Page headings
-text-xl     - Section headings
-text-lg     - Subsection headings
-text-base   - Large body text (rare)
-text-sm     - DEFAULT - All body text, inputs, buttons
-text-xs     - Captions, metadata, tiny labels
-```
+Default system sans-serif stack: `ui-sans-serif, system-ui, sans-serif`.
 
-### Font Weights
+### Scale
 
-```css
-font-bold      - Page titles, section headers
-font-semibold  - Links, important actions
-font-medium    - Labels, form fields (rare)
-font-normal    - DEFAULT - Everything else
-```
+- **Logo**: `text-3xl` (only used once in header)
+- **Page Titles**: `text-2xl font-bold`
+- **Section Headers**: `text-xl font-bold`
+- **Subsection Headers**: `text-lg font-bold`
+- **Body Text**: `text-sm` (DEFAULT)
+- **Metadata/Captions**: `text-xs text-gray-500`
 
-### Text Colors
+### Links
 
-```css
-text-gray-900  - Primary content
-text-gray-700  - User greetings, secondary content
-text-gray-600  - Metadata, timestamps, view counts
-text-blue-600  - Links (with hover:underline)
-text-purple-700 - Brand elements
-text-red-600   - Error messages
-```
+- **Style**: Blue text (`text-blue-600`)
+- **Hover**: Underline (`hover:underline`)
+- **Visited**: Standard browser behavior (optional `visited:text-purple-800`)
 
-## Component Patterns
+## Components
 
 ### Buttons
 
-**Primary Button** (main actions):
+- **Primary**: `bg-purple-700 text-white hover:bg-purple-800 rounded px-4 py-2`
+- **Secondary**: `bg-white text-gray-900 border border-gray-400 hover:bg-gray-100 rounded px-4 py-2`
+- **Danger**: `bg-red-700 text-white hover:bg-red-800 rounded px-4 py-2`
+- **Link**: `text-blue-600 hover:underline bg-transparent p-0`
+
+### Inputs
+
+- **Base**: `w-full border border-gray-300 px-3 py-1 text-sm`
+- **Focus**: `outline-none ring-1 ring-purple-700 border-purple-700`
+- **Error**: `border-red-500 focus:ring-red-500`
+
+### Cards/Containers
+
+- **Border**: `border border-gray-300`
+- **Background**: `bg-white`
+- **Padding**: `p-4` (default)
+- **Shadow**: NONE
+
+### Badges
+
+- **Base**: `border px-2 py-0.5 text-xs font-medium`
+- **Variants**:
+  - Default: `border-gray-300 text-gray-600 bg-gray-50`
+  - Success: `border-green-300 text-green-700 bg-green-50`
+  - Warning: `border-yellow-300 text-yellow-700 bg-yellow-50`
+  - Danger: `border-red-300 text-red-700 bg-red-50`
+
+## Layout Patterns
+
+### Page Container
+
+Max-width container centered on the page.
 
 ```html
-<button class="px-4 py-2 bg-purple-700 text-white hover:bg-purple-800 rounded text-sm">
-	submit
-</button>
-```
-
-**Secondary Button** (alternative actions):
-
-```html
-<button class="px-4 py-2 border border-gray-400 bg-white hover:bg-gray-100 text-gray-900 text-sm">
-	cancel
-</button>
-```
-
-**Danger Button** (destructive actions):
-
-```html
-<button class="px-4 py-2 bg-red-700 text-white hover:bg-red-800 rounded text-sm">delete</button>
-```
-
-**Link Button** (tertiary actions):
-
-```html
-<button class="text-blue-600 hover:underline text-sm">learn more</button>
-```
-
-### Form Inputs
-
-**Text Input**:
-
-```html
-<input
-	type="text"
-	class="w-full px-3 py-1 border border-gray-300 text-sm"
-	placeholder="enter text..."
-/>
-```
-
-**Input with Label**:
-
-```html
-<label class="block mb-4">
-	<span class="block text-sm font-medium mb-1">Email address</span>
-	<input type="email" class="w-full px-3 py-1 border border-gray-300 text-sm" />
-</label>
-```
-
-**Input with Error**:
-
-```html
-<input type="text" class="w-full px-3 py-1 border border-red-500 text-sm" />
-<span class="block text-sm text-red-600 mt-1">This field is required</span>
-```
-
-**Select Dropdown**:
-
-```html
-<select class="px-3 py-1 border border-gray-300 text-sm">
-	<option value="">select location...</option>
-	<option value="sf">San Francisco</option>
-</select>
-```
-
-### Cards & Containers
-
-**Simple Card** (with border):
-
-```html
-<div class="border border-gray-300 bg-white p-4">Content here</div>
-```
-
-**Borderless Section**:
-
-```html
-<div class="bg-white p-4">Content here</div>
-```
-
-**Section Separator**:
-
-```html
-<div class="border-t border-gray-300 pt-4 mt-4">New section</div>
-```
-
-### Lists & Navigation
-
-**Link List** (categories):
-
-```html
-<ul class="space-y-1">
-	<li>
-		<a href="/categories/electronics" class="text-sm text-blue-600 hover:underline">
-			electronics
-		</a>
-	</li>
-	<li>
-		<a href="/categories/furniture" class="text-sm text-blue-600 hover:underline"> furniture </a>
-	</li>
-</ul>
-```
-
-**Data List** (listings):
-
-```html
-<div class="space-y-2">
-	<div class="py-2 border-b border-gray-200">
-		<a href="/listings/1" class="text-blue-600 hover:underline">Item Title</a>
-		<div class="text-sm text-gray-600">
-			<span class="font-semibold">$50</span>
-			<span class="mx-2">·</span>
-			<span>San Francisco</span>
-		</div>
-	</div>
+<div class="max-w-6xl mx-auto px-4 py-6">
+  <!-- Content -->
 </div>
 ```
 
-**Breadcrumbs**:
+### Header
+
+Simple top bar with logo and auth links.
 
 ```html
-<nav class="text-sm text-gray-600 mb-4">
-	<a href="/" class="text-blue-600 hover:underline">home</a>
-	<span class="mx-2">›</span>
-	<a href="/categories/electronics" class="text-blue-600 hover:underline">electronics</a>
-	<span class="mx-2">›</span>
-	<span class="text-gray-900">smartphones</span>
-</nav>
-```
-
-### Header & Navigation
-
-**Page Header** (craigslist style):
-
-```html
-<header class="mb-6 pb-4 border-b border-gray-300">
-	<div class="flex items-center justify-between">
-		<a href="/" class="text-3xl font-bold text-purple-700">craigslist</a>
-		<div class="text-sm">
-			<a href="/login" class="text-blue-600 hover:underline">log in</a>
-			<span class="mx-2">|</span>
-			<a href="/register" class="text-blue-600 hover:underline">sign up</a>
-			<span class="mx-2">|</span>
-			<a href="/listings/new" class="text-blue-600 hover:underline font-semibold">
-				post to classifieds
-			</a>
-		</div>
-	</div>
+<header class="border-b border-gray-300 bg-white">
+  <div class="max-w-6xl mx-auto px-4 h-12 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="text-purple-700 font-bold text-xl">logo</a>
+    <!-- Nav -->
+    <nav class="flex gap-4 text-sm">
+      <a href="/post" class="text-blue-600 hover:underline">post</a>
+      <a href="/account" class="text-blue-600 hover:underline">account</a>
+    </nav>
+  </div>
 </header>
 ```
 
-**Section Header**:
+### Data Grids/Lists
+
+Lists of items should use simple borders separators.
 
 ```html
-<h2 class="font-bold text-xl mb-4 text-gray-900">recent posts</h2>
-```
-
-**Subsection Header**:
-
-```html
-<h3 class="font-bold text-lg mb-2 text-gray-900">Electronics</h3>
-```
-
-### Badges & Labels
-
-**Status Badge**:
-
-```html
-<span class="inline-block px-2 py-0.5 text-xs border border-gray-400 bg-gray-100 text-gray-800">
-	active
-</span>
-```
-
-**Success Badge**:
-
-```html
-<span class="inline-block px-2 py-0.5 text-xs border border-green-600 bg-green-50 text-green-800">
-	verified
-</span>
-```
-
-**Warning Badge**:
-
-```html
-<span
-	class="inline-block px-2 py-0.5 text-xs border border-yellow-600 bg-yellow-50 text-yellow-800"
->
-	pending
-</span>
-```
-
-## Layout Guidelines
-
-### Page Structure
-
-```html
-<div class="min-h-screen bg-white">
-	<div class="max-w-6xl mx-auto px-4 py-6">
-		<!-- Header with logo and navigation -->
-		<header class="mb-6 pb-4 border-b border-gray-300">
-			<!-- Header content -->
-		</header>
-
-		<!-- Main content -->
-		<main>
-			<!-- Page content -->
-		</main>
-	</div>
+<div class="space-y-2">
+  <div class="border-b border-gray-200 py-2">Item 1</div>
+  <div class="border-b border-gray-200 py-2">Item 2</div>
 </div>
 ```
 
-### Grid Layouts
+## Anti-Patterns (What NOT to do)
 
-```html
-<!-- Category grid (3 columns on desktop) -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-	<div>Column 1</div>
-	<div>Column 2</div>
-	<div>Column 3</div>
-</div>
+1. **No Drop Shadows**: Use borders (`border-gray-300`) to define depth/separation.
+2. **No Large Border Radius**: Use standard `rounded` (0.25rem) or none. Avoid `rounded-xl`.
+3. **No Gradients**: Use solid colors.
+4. **No Animations**: UI should be instant and static.
+5. **No "Modern" Whitespace**: Keep density high. `gap-2` or `gap-4` is usually enough.
 
-<!-- Listing detail (2/3 - 1/3 split) -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-	<div class="lg:col-span-2">Main content</div>
-	<div>Sidebar</div>
-</div>
+## CSS Utilities (Tailwind)
+
+We use Tailwind CSS v4.
+
+### config
+
+```javascript
+// tailwind.config.js
+export default {
+  content: ['./src/**/*.{html,js,svelte,ts}'],
+  theme: {
+    extend: {
+      colors: {
+        // Standard Tailwind palette is sufficient
+      }
+    }
+  }
+}
 ```
 
-### Spacing
+### Custom Classes
 
-```css
-/* Vertical spacing between sections */
-mb-8, mt-8, py-8  - Major sections
-mb-6, mt-6, py-6  - Medium sections
-mb-4, mt-4, py-4  - Small sections
-mb-2, mt-2, py-2  - Tight spacing
-
-/* List spacing */
-space-y-1  - Tight lists (navigation links)
-space-y-2  - Normal lists (listing items)
-space-y-4  - Loose lists (form fields)
-
-/* Horizontal spacing */
-gap-2   - Tight inline elements
-gap-3   - Normal inline elements
-gap-4   - Form inputs
-gap-6   - Major sections
-gap-8   - Wide sections
-```
-
-## Anti-Patterns (DON'T DO THIS)
-
-### ❌ Modern Flourishes
-
-```html
-<!-- NO rounded-lg or rounded-xl -->
-<div class="rounded-lg shadow-xl">
-	❌
-
-	<!-- NO shadows unless critical -->
-	<div class="shadow-md">
-		❌
-
-		<!-- NO transitions or animations -->
-		<button class="transition-all duration-300">
-			❌
-
-			<!-- NO gradient backgrounds -->
-			<div class="bg-gradient-to-r from-purple-500">❌</div>
-		</button>
-	</div>
-</div>
-```
-
-### ❌ Fancy Typography
-
-```html
-<!-- NO large default text -->
-<p class="text-lg">Body text</p>
-❌
-
-<!-- NO fancy font weights everywhere -->
-<span class="font-semibold">Normal text</span> ❌
-
-<!-- NO colored text except links/errors -->
-<p class="text-purple-600">Normal paragraph</p>
-❌
-```
-
-### ❌ Over-styled Components
-
-```html
-<!-- NO fancy hover states -->
-<a class="transform hover:scale-105">
-	❌
-
-	<!-- NO complex focus rings -->
-	<input class="focus:ring-4 focus:ring-purple-500" /> ❌
-
-	<!-- NO pill-shaped badges -->
-	<span class="rounded-full px-4 py-2"> ❌</span></a
->
-```
+Avoid `@apply`. Use utility classes directly in markup or extract components.
 
 ## Accessibility
 
-While maintaining the retro aesthetic, ensure:
-
-1. **Color Contrast**: All text meets WCAG AA standards
-2. **Focus States**: Keyboard navigation works (browser defaults are fine)
-3. **Labels**: All form inputs have proper labels
-4. **Alt Text**: All images have descriptive alt attributes
-5. **Semantic HTML**: Use proper heading hierarchy (h1 → h2 → h3)
-
-## Mobile Responsive
-
-### Breakpoints
-
-```css
-sm:   640px   - Small tablets
-md:   768px   - Medium tablets
-lg:   1024px  - Laptops
-xl:   1280px  - Desktops
-```
-
-### Mobile-First Approach
-
-```html
-<!-- Stack on mobile, grid on desktop -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-	<!-- Hide on mobile, show on desktop -->
-	<div class="hidden lg:block">Desktop only</div>
-
-	<!-- Full width on mobile, fixed on desktop -->
-	<div class="w-full lg:max-w-md"></div>
-</div>
-```
-
-## Example Pages
-
-### Homepage
-
-- Large logo
-- Location selector + search bar
-- 3-column category grid
-- Recent listings list at bottom
-- Minimal header with login/signup links
-
-### Listing Detail
-
-- Simple breadcrumb navigation
-- Title and price (big and bold)
-- Category, location, date metadata
-- Image gallery (simple prev/next)
-- Description in plain text
-- Contact info (revealed on click)
-- Sidebar with user actions
-
-### Form Pages (Login/Register)
-
-- Centered narrow form (max-w-md)
-- Simple input fields
-- Error messages in red below fields
-- Single submit button
-- Link to alternative action
-
-## Component Library
-
-### Button.svelte
-
-- Variants: `primary`, `secondary`, `danger`, `link`
-- Sizes: `sm`, `md`, `lg`
-- NO fancy styling, just functional
-
-### Input.svelte
-
-- Optional label
-- Error state support
-- Full-width by default
-- Simple border, no focus ring
-
-### Card.svelte
-
-- Border or borderless
-- Padding options: `none`, `sm`, `md`, `lg`
-- NO shadows
-
-### Badge.svelte
-
-- Variants: `default`, `success`, `warning`, `danger`, `info`
-- Small bordered rectangles
-- NO rounded pills
-
-### Navigation.svelte
-
-- Simple header with logo + links
-- Pipe-separated navigation
-- Blue hyperlinks
-- NO navigation bar background
-
-### Container.svelte
-
-- Max-width containers
-- Responsive padding
-- NO extra styling
-
-### PageHeader.svelte
-
-- Breadcrumb support
-- Simple text title
-- Optional action slot
-
-## Writing Style
-
-### Text Case
-
-- **Lowercase preferred**: "post to classifieds", "my account", "sign in"
-- **Title Case exceptions**: Page titles, proper nouns
-- **UPPERCASE rare**: Maybe for emphasis in rare cases
-
-### Wording
-
-- Direct and functional: "log in" not "Sign In To Your Account"
-- Concise: "post" not "Create New Listing"
-- User-focused: "my account" not "User Dashboard"
-
-### Placeholders
-
-- Lowercase, helpful: `"enter your email..."`
-- Concise: `"search craigslist"` not `"Search for items, categories, locations..."`
-
-## Summary
-
-**Remember**: If it looks like it could be from 1999, you're on the right track. YourApp's design is legendary precisely because it doesn't try to be modern - it's timeless, functional, and gets out of the way.
-
-**Key Mantras**:
-
-1. "Does this serve a function?" - If no, remove it
-2. "Would this look out of place in 1999?" - If yes, simplify it
-3. "Can I remove a style and it still works?" - Then remove it
-4. "Blue links, purple branding, white background" - Always
-
-When in doubt, look at the actual YourApp website and match that energy.
+- **Contrast**: Ensure text meets WCAG AA (gray-600+ on white).
+- **Focus**: Always provide visible focus states (default browser ring or `ring-purple-700`).
+- **Semantic HTML**: Use `<button>`, `<a>`, `<input>`, `<label>` correctly.
+- **Keyboard Nav**: Ensure all interactive elements are tab-accessible.

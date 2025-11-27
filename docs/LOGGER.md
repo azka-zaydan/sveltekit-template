@@ -4,7 +4,7 @@
 
 ## Overview
 
-Production-ready Winston logger for the YourApp clone with automatic API request/response tracking, multi-schema database logging, and environment-aware configuration.
+Production-ready Winston logger for the Craigslist clone with automatic API request/response tracking, multi-schema database logging, and environment-aware configuration.
 
 ## Features
 

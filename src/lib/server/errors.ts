@@ -51,7 +51,7 @@ export interface ApiErrorResponse {
 /**
  * Type guard to check if error is a ZodError
  */
-export function isZodError(error: unknown): error is z.ZodError {
+export function isZodError(error: unknown): error is z.core.$ZodError {
 	return (
 		typeof error === 'object' &&
 		error !== null &&
@@ -64,7 +64,7 @@ export function isZodError(error: unknown): error is z.ZodError {
  * Convert Zod issues to field-level error map
  * Returns: { fieldName: ['error1', 'error2'], ... }
  */
-export function zodIssuesToFieldErrors(issues: z.ZodIssue[]): Record<string, string[]> {
+export function zodIssuesToFieldErrors(issues: z.core.$ZodIssue[]): Record<string, string[]> {
 	const fieldErrors: Record<string, string[]> = {};
 
 	for (const issue of issues) {
@@ -84,10 +84,10 @@ export function zodIssuesToFieldErrors(issues: z.ZodIssue[]): Record<string, str
 /**
  * Create validation error response from ZodError
  */
-export function fromZodError(error: z.ZodError, requestId?: string): Response {
+export function fromZodError(error: z.core.$ZodError, requestId?: string): Response {
 	const fieldErrors = zodIssuesToFieldErrors(error.issues);
 
-	log.warn('[Validation Error]', {
+	log.warn('Validation error', {
 		requestId,
 		errorCount: error.issues.length,
 		fields: Object.keys(fieldErrors)
@@ -149,20 +149,13 @@ export function createApiError(
 
 	// Log error for monitoring (warnings for client errors, errors for server errors)
 	const logLevel = status >= 500 ? 'error' : 'warn';
-	const logMessage = `[API Error] ${title}`;
-	const logData = {
+	log[logLevel](`API Error: ${title}`, {
 		requestId: metadata?.requestId,
 		type,
 		status,
 		detail,
 		errorFields: metadata?.errors ? Object.keys(metadata.errors) : undefined
-	};
-
-	if (logLevel === 'error') {
-		log.error(logMessage, logData);
-	} else {
-		log.warn(logMessage, logData);
-	}
+	});
 
 	return json(errorResponse, {
 		status,
@@ -174,53 +167,6 @@ export function createApiError(
 
 /**
  * Common error creators for convenience
- *
- * @example
- * ```typescript
- * // Validation error from Zod
- * const result = registerSchema.safeParse(body);
- * if (!result.success) {
- *   return ApiError.fromZod(result.error, requestId);
- * }
- *
- * // Custom validation error
- * if (!data.title) {
- *   return ApiError.badRequest('Title is required', undefined, requestId);
- * }
- *
- * // Authentication required
- * if (!locals.user) {
- *   return ApiError.unauthorized('You must be logged in', requestId);
- * }
- *
- * // Insufficient permissions
- * if (listing.userId !== locals.user.id) {
- *   return ApiError.forbidden('You can only edit your own listings', requestId);
- * }
- *
- * // Resource not found
- * const user = await findUser(id);
- * if (!user) {
- *   return ApiError.notFound('User', requestId);
- * }
- *
- * // Conflict (e.g., duplicate username)
- * if (await usernameExists(username)) {
- *   return ApiError.conflict('Username already taken', requestId);
- * }
- *
- * // Rate limit exceeded
- * if (!rateLimitResult.allowed) {
- *   return ApiError.rateLimitExceeded(retryAfter, requestId);
- * }
- *
- * // Internal server error
- * try {
- *   // ... operation
- * } catch (error) {
- *   return ApiError.internal('Failed to process request', requestId);
- * }
- * ```
  */
 export const ApiError = {
 	/** 400 Bad Request - Validation or input errors */
@@ -231,7 +177,7 @@ export const ApiError = {
 		}),
 
 	/** 400 Bad Request - From Zod validation error */
-	fromZod: (error: z.ZodError, requestId?: string) => fromZodError(error, requestId),
+	fromZod: (error: z.core.$ZodError, requestId?: string) => fromZodError(error, requestId),
 
 	/** 401 Unauthorized - Authentication required */
 	unauthorized: (detail = 'Authentication required', requestId?: string) =>
@@ -267,4 +213,78 @@ export const ApiError = {
 	/** 500 Internal Server Error - Unexpected server error */
 	internal: (detail = 'An unexpected error occurred', requestId?: string) =>
 		createApiError(500, ErrorType.INTERNAL_ERROR, 'Internal Server Error', detail, { requestId })
+};
+
+// ===========================
+// Typed Success Responses
+// ===========================
+
+/** Generic success response structure */
+export interface ApiSuccessResponse<T = unknown> {
+	/** Indicates this is a success response */
+	success: true;
+	/** The response data */
+	data: T;
+	/** HTTP status code */
+	status: number;
+	/** Optional metadata */
+	meta?: {
+		/** Request ID for tracing */
+		requestId?: string;
+		/** Pagination info */
+		pagination?: {
+			total: number;
+			limit: number;
+			offset: number;
+			hasMore: boolean;
+		};
+		/** Timestamp of the response */
+		timestamp?: string;
+		[key: string]: unknown;
+	};
+}
+
+/**
+ * Helper to create typed success responses
+ *
+ * @example
+ * ```typescript
+ * // Simple success
+ * return ApiSuccess.ok({ id: '123', name: 'John' }, { requestId });
+ *
+ * // Created resource
+ * return ApiSuccess.created(newUser, { requestId, resourceId: newUser.id });
+ *
+ * // Paginated list
+ * return ApiSuccess.ok(users, {
+ *   requestId,
+ *   pagination: { total: 100, limit: 10, offset: 0, hasMore: true }
+ * });
+ * ```
+ */
+export const ApiSuccess = {
+	/** 200 OK - Standard success response */
+	ok: <T>(data: T, meta?: ApiSuccessResponse<T>['meta']): Response => {
+		const response: ApiSuccessResponse<T> = {
+			success: true,
+			data,
+			status: 200,
+			...(meta && { meta: { ...meta, timestamp: new Date().toISOString() } })
+		};
+		return json(response, { status: 200 });
+	},
+
+	/** 201 Created - Resource successfully created */
+	created: <T>(data: T, meta?: ApiSuccessResponse<T>['meta']): Response => {
+		const response: ApiSuccessResponse<T> = {
+			success: true,
+			data,
+			status: 201,
+			...(meta && { meta: { ...meta, timestamp: new Date().toISOString() } })
+		};
+		return json(response, { status: 201 });
+	},
+
+	/** 204 No Content - Success with no response body */
+	noContent: (): Response => new Response(null, { status: 204 })
 };

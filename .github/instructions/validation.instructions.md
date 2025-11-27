@@ -6,7 +6,7 @@
 
 ## Schema-First Development Workflow
 
-1. **ALWAYS create Zod objects for tables** in `src/lib/types/*.schemas.ts`
+1. **ALWAYS create Zod objects** in `src/lib/types/*.schemas.ts` (tables, request bodies, and query schemas). Do not define schemas inline in routes or components.
 2. **ALWAYS use `z.infer<>` to create types** - never duplicate type definitions
 3. **ALWAYS validate in two places**:
    - **Client/Frontend**: Validate before sending to action or fetching API
@@ -54,18 +54,18 @@ import {
 Schema files mirror database structure:
 
 - `src/lib/types/auth.schemas.ts` - User, Session, PhoneVerification
-- `src/lib/types/app.schemas.ts` - Listings, ListingImages, Favorites
-- `src/lib/types/master.schemas.ts` - Categories, Locations
+- `src/lib/types/app.schemas.ts` - Core application entities
+- `src/lib/types/master.schemas.ts` - Reference data
 - `src/lib/types/common.schemas.ts` - Reusable primitives and helpers
 
 Each entity has multiple schema variants:
 
-- **Base schema**: Full database record (`userSchema`, `listingSchema`)
-- **Create schema**: For creating new records (`createListingSchema`, `registerUserSchema`)
-- **Update schema**: Partial version for updates (`updateListingSchema`)
-- **Response schema**: What API returns (`userResponseSchema`, `listingDetailResponseSchema`)
-- **Query schema**: URL params/query strings (`listingQuerySchema`)
-- **API response schemas**: Match actual endpoint responses (`apiListingsResponseSchema`)
+- **Base schema**: Full database record (`userSchema`, `itemSchema`)
+- **Create schema**: For creating new records (`createItemSchema`, `registerUserSchema`)
+- **Update schema**: Partial version for updates (`updateItemSchema`)
+- **Response schema**: What API returns (`userResponseSchema`, `itemResponseSchema`)
+- **Query schema**: URL params/query strings (`itemQuerySchema`)
+- **API response schemas**: Match actual endpoint responses (`apiItemsResponseSchema`)
 
 ## Type Inference (MANDATORY PATTERN)
 
@@ -73,20 +73,20 @@ Each entity has multiple schema variants:
 
 ```typescript
 // ✅ CORRECT - Single source of truth
-export const listingSchema = z.object({
+export const itemSchema = z.object({
 	id: uuidSchema,
-	title: z.string().min(1).max(255),
+	name: z.string().min(1).max(255),
 	price: priceSchema
 	// ...
 });
 
 // Infer types from schemas
-export type Listing = z.infer<typeof listingSchema>;
-export type CreateListing = z.infer<typeof createListingSchema>;
-export type UpdateListing = z.infer<typeof updateListingSchema>;
+export type Item = z.infer<typeof itemSchema>;
+export type CreateItem = z.infer<typeof createItemSchema>;
+export type UpdateItem = z.infer<typeof updateItemSchema>;
 
 // ❌ WRONG - Don't duplicate type definitions manually
-// type Listing = { id: string; title: string; ... }
+// type Item = { id: string; name: string; ... }
 ```
 
 ## Client-Side Validation (Frontend)
@@ -95,12 +95,12 @@ export type UpdateListing = z.infer<typeof updateListingSchema>;
 
 ```typescript
 // In Svelte component or +page.server.ts
-import { createListingSchema } from '$lib/types/app.schemas';
+import { createItemSchema } from '$lib/types/app.schemas';
 import { createApiClient } from '$lib/api/client';
 
 // Validate before API call
 const api = createApiClient(fetch);
-const result = createListingSchema.safeParse(formData);
+const result = createItemSchema.safeParse(formData);
 
 if (!result.success) {
 	// Show validation errors to user
@@ -114,7 +114,7 @@ if (!result.success) {
 }
 
 // Call API with validated data (already typed!)
-await api.listings.create(result.data);
+await api.items.create(result.data);
 ```
 
 ## Backend Validation (API Routes)
@@ -122,7 +122,7 @@ await api.listings.create(result.data);
 **ALWAYS validate received requests and type-cast:**
 
 ```typescript
-import { createListingSchema } from '$lib/types/app.schemas';
+import { createItemSchema } from '$lib/types/app.schemas';
 import { ApiError, ApiSuccess } from '$lib/server/errors';
 import { withApiLogging } from '$lib/server/logger/middleware';
 
@@ -137,28 +137,28 @@ export async function POST(event) {
 				return ApiError.badRequest('Invalid JSON in request body', undefined, requestId);
 			}
 
-			const result = createListingSchema.safeParse(body);
+			const result = createItemSchema.safeParse(body);
 
 			if (!result.success) {
 				// Automatically converts ZodError to ApiErrorResponse with field errors
 				return ApiError.fromZod(result.error, requestId);
 			}
 
-			// result.data is now fully typed as CreateListing!
+			// result.data is now fully typed as CreateItem!
 			const validatedData = result.data;
 
 			// Type-safe database operations
-			const [listing] = await db
-				.insert(listings)
+			const [item] = await db
+				.insert(items)
 				.values({
 					...validatedData,
 					userId: locals.user.id
 				})
 				.returning();
 
-			return ApiSuccess.created(listing, { requestId });
+			return ApiSuccess.created(item, { requestId });
 		},
-		{ operation: 'CREATE_LISTING', schema: 'app' }
+		{ operation: 'CREATE_ITEM', schema: 'app' }
 	);
 }
 ```
@@ -207,32 +207,26 @@ export const actions: Actions = {
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { createListingSchema } from '$lib/types/app.schemas';
+import { createItemSchema } from '$lib/types/app.schemas';
 
-describe('createListingSchema', () => {
-	it('validates correct listing data', () => {
+describe('createItemSchema', () => {
+	it('validates correct item data', () => {
 		const validData = {
-			title: 'Test Listing',
-			description: 'A valid description here',
-			categoryId: '123e4567-e89b-12d3-a456-426614174000',
-			locationId: '123e4567-e89b-12d3-a456-426614174001',
+			name: 'Test Item',
 			price: '99.99'
 		};
 
-		const result = createListingSchema.safeParse(validData);
+		const result = createItemSchema.safeParse(validData);
 		expect(result.success).toBe(true);
 	});
 
 	it('rejects invalid data', () => {
 		const invalidData = {
-			title: 'ab', // Too short
-			description: 'short',
-			categoryId: 'not-a-uuid',
-			locationId: 'not-a-uuid',
+			name: 'ab', // Too short
 			price: '-10.00' // Negative price
 		};
 
-		const result = createListingSchema.safeParse(invalidData);
+		const result = createItemSchema.safeParse(invalidData);
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error.issues.length).toBeGreaterThan(0);

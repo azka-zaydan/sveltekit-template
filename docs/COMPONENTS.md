@@ -2,20 +2,27 @@
 
 > **See also**: [`UI_STYLE_GUIDE.md`](UI_STYLE_GUIDE.md) for design principles and patterns
 
-Complete reference for all reusable UI and layout components in the YourApp clone.
+Complete reference for all reusable UI and layout components in the project.
 
 ## Component Philosophy
 
-All components follow the **YourApp retro aesthetic**:
+All components follow the project's **design aesthetic**:
 
 - Minimal styling
 - Functional design
 - No modern flourishes
-- Classic web patterns from the late 90s/early 2000s
+- Classic web patterns
 
-## UI Components (`src/lib/components/ui/`)
+## Component Organization
 
-### Button.svelte
+Components are organized hierarchically:
+
+- **`ui/common/`**: Base/reusable components (forms, display, actions)
+- **`ui/layout/`**: Layout components
+
+## Common UI Components (`src/lib/components/ui/common/`)
+
+### Button.svelte (`ui/common/actions/Button.svelte`)
 
 Simple, functional button component with variant support.
 
@@ -36,7 +43,9 @@ interface ButtonProps {
 
 ```svelte
 <script>
-	import Button from '$lib/components/ui/Button.svelte';
+	import Button from '$ui/common/actions/Button.svelte';
+	// Or use index export:
+	// import { Button } from '$components';
 </script>
 
 <!-- Primary button -->
@@ -67,7 +76,116 @@ interface ButtonProps {
 
 ---
 
-### Input.svelte
+### Select.svelte (`ui/common/forms/Select.svelte`)
+
+Generic select dropdown with error support and flexible options.
+
+**Props**:
+
+```typescript
+interface SelectProps {
+	label?: string;
+	error?: string;
+	required?: boolean;
+	class?: string;
+	name?: string;
+	id?: string;
+	value?: string;
+	options?: Array<{ value: string; label: string }>;
+	disabled?: boolean;
+}
+```
+
+**Usage**:
+
+```svelte
+<script>
+	import { Select } from '$lib/components';
+
+	let selectedValue = $state('');
+</script>
+
+<!-- With options array -->
+<Select
+	label="Choose an option"
+	bind:value={selectedValue}
+	options={[
+		{ value: 'opt1', label: 'Option 1' },
+		{ value: 'opt2', label: 'Option 2' }
+	]}
+	required
+/>
+
+<!-- With error -->
+<Select label="Location" bind:value={selectedValue} error="Please select a location" />
+```
+
+---
+
+### Textarea.svelte (`ui/common/forms/Textarea.svelte`)
+
+Multiline text input with label, validation error support, and character counting.
+
+**Props**:
+
+```typescript
+interface TextareaProps {
+	label?: string;
+	error?: string;
+	required?: boolean;
+	name?: string;
+	value?: string;
+	placeholder?: string;
+	rows?: number;
+	maxlength?: number;
+}
+```
+
+**Usage**:
+
+```svelte
+<script>
+	import { Textarea } from '$lib/components';
+
+	let description = $state('');
+</script>
+
+<Textarea label="Description" bind:value={description} required maxlength={500} rows={8} />
+```
+
+**Features**:
+
+- Character counter if `maxlength` is set
+- Shows validation errors below field
+- Auto-resizes based on `rows` prop
+
+---
+
+### FormError.svelte (`ui/common/forms/FormError.svelte`)
+
+Simple, consistent error message display for forms.
+
+**Props**:
+
+```typescript
+interface FormErrorProps {
+	error?: string;
+}
+```
+
+**Usage**:
+
+```svelte
+<script>
+	import { FormError } from '$lib/components';
+</script>
+
+<FormError error={errors?.fieldName} />
+```
+
+---
+
+### Input.svelte (`ui/common/forms/Input.svelte`)
 
 Simple form input with optional label and error support.
 
@@ -93,7 +211,9 @@ interface InputProps {
 
 ```svelte
 <script>
-	import Input from '$lib/components/ui/Input.svelte';
+	import Input from '$ui/common/forms/Input.svelte';
+	// Or use index export:
+	// import { Input } from '$components';
 
 	let email = $state('');
 </script>
@@ -120,7 +240,7 @@ interface InputProps {
 
 ---
 
-### Card.svelte
+### Card.svelte (`ui/common/display/Card.svelte`)
 
 Simple container with optional border and padding.
 
@@ -138,7 +258,9 @@ interface CardProps {
 
 ```svelte
 <script>
-	import Card from '$lib/components/ui/Card.svelte';
+	import Card from '$ui/common/display/Card.svelte';
+	// Or use index export:
+	// import { Card } from '$components';
 </script>
 
 <!-- Default card (medium padding, with border) -->
@@ -172,7 +294,7 @@ interface CardProps {
 
 ---
 
-### Badge.svelte
+### Badge.svelte (`ui/common/display/Badge.svelte`)
 
 Small label/tag component for status or categories.
 
@@ -189,7 +311,9 @@ interface BadgeProps {
 
 ```svelte
 <script>
-	import Badge from '$lib/components/ui/Badge.svelte';
+	import Badge from '$ui/common/display/Badge.svelte';
+	// Or use index export:
+	// import { Badge } from '$components';
 </script>
 
 <!-- Default badge -->
@@ -217,7 +341,7 @@ interface BadgeProps {
 
 ---
 
-## Layout Components (`src/lib/components/layout/`)
+## Layout Components (`src/lib/components/ui/layout/`)
 
 ### Navigation.svelte
 
@@ -229,7 +353,9 @@ Site-wide header with logo and navigation links.
 
 ```svelte
 <script>
-	import Navigation from '$lib/components/layout/Navigation.svelte';
+	import Navigation from '$ui/layout/Navigation.svelte';
+	// Or use index export:
+	// import { Navigation } from '$components';
 </script>
 
 <Navigation />
@@ -237,12 +363,11 @@ Site-wide header with logo and navigation links.
 
 **Features**:
 
-- Displays "craigslist" logo as link to home
+- Displays logo as link to home
 - Shows user greeting if logged in
 - Login/signup links for guests
-- "Post to classifieds" link (always visible)
+- Action link (e.g., "post")
 - Logout button with loading state
-- Pipe-separated navigation items
 
 **Styling**:
 
@@ -269,7 +394,9 @@ interface ContainerProps {
 
 ```svelte
 <script>
-	import Container from '$lib/components/layout/Container.svelte';
+	import Container from '$ui/layout/Container.svelte';
+	// Or use index export:
+	// import { Container } from '$components';
 </script>
 
 <!-- Default (lg) -->
@@ -320,7 +447,9 @@ interface PageHeaderProps {
 
 ```svelte
 <script>
-	import PageHeader from '$lib/components/layout/PageHeader.svelte';
+	import PageHeader from '$ui/layout/PageHeader.svelte';
+	// Or use index export:
+	// import { PageHeader } from '$components';
 </script>
 
 <!-- Simple header -->
@@ -331,15 +460,15 @@ interface PageHeaderProps {
 	title="iPhone 13 Pro"
 	breadcrumbs={[
 		{ href: '/', label: 'home' },
-		{ href: '/categories/electronics', label: 'electronics' },
-		{ label: 'smartphones' }
+		{ href: '/items', label: 'items' },
+		{ label: 'detail' }
 	]}
 />
 
 <!-- With action button (using snippet) -->
-<PageHeader title="My Listings">
+<PageHeader title="My Items">
 	{#snippet children()}
-		<Button href="/listings/new">Create Listing</Button>
+		<Button href="/items/new">Create Item</Button>
 	{/snippet}
 </PageHeader>
 ```
@@ -359,9 +488,11 @@ interface PageHeaderProps {
 
 ```svelte
 <script>
-	import Input from '$lib/components/ui/Input.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import Container from '$lib/components/layout/Container.svelte';
+	import Input from '$ui/common/forms/Input.svelte';
+	import Button from '$ui/common/actions/Button.svelte';
+	import Container from '$ui/layout/Container.svelte';
+	// Or use index exports:
+	// import { Input, Button, Container } from '$components';
 
 	let email = $state('');
 	let password = $state('');
@@ -391,41 +522,16 @@ interface PageHeaderProps {
 </Container>
 ```
 
-### Listing Card
-
-```svelte
-<script>
-	import Card from '$lib/components/ui/Card.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
-</script>
-
-<Card>
-	<a href="/listings/123" class="text-blue-600 hover:underline">
-		iPhone 13 Pro - Excellent Condition
-	</a>
-
-	<div class="text-sm text-gray-600 mt-1">
-		<span class="font-semibold">$799</span>
-		<span class="mx-2">·</span>
-		<span>San Francisco, CA</span>
-		<span class="mx-2">·</span>
-		<span>2 hours ago</span>
-	</div>
-
-	<div class="mt-2">
-		<Badge variant="success">Active</Badge>
-	</div>
-</Card>
-```
-
 ### Dashboard Layout
 
 ```svelte
 <script>
-	import Navigation from '$lib/components/layout/Navigation.svelte';
-	import PageHeader from '$lib/components/layout/PageHeader.svelte';
-	import Container from '$lib/components/layout/Container.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import Navigation from '$ui/layout/Navigation.svelte';
+	import PageHeader from '$ui/layout/PageHeader.svelte';
+	import Container from '$ui/layout/Container.svelte';
+	import Button from '$ui/common/actions/Button.svelte';
+	// Or use index exports:
+	// import { Navigation, PageHeader, Container, Button } from '$components';
 </script>
 
 <Navigation />
@@ -433,7 +539,7 @@ interface PageHeaderProps {
 <Container>
 	<PageHeader title="My Dashboard">
 		{#snippet children()}
-			<Button href="/listings/new">Create Listing</Button>
+			<Button href="/items/new">Create Item</Button>
 		{/snippet}
 	</PageHeader>
 

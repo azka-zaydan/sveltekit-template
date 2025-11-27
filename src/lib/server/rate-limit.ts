@@ -1,5 +1,5 @@
 /**
- * Simple in-memory rate limiter
+ * Simple in-memory rate limiter for authentication endpoints
  *
  * For production, consider using a more robust solution like:
  * - Redis-based rate limiting for distributed systems

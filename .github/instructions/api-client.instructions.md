@@ -24,13 +24,9 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	const api = createApiClient(fetch);
 
 	// Type-safe API calls with automatic validation
-	const listings = await api.listings.getAll({ limit: 10 });
-	const categories = await api.categories.getAll({ includeChildren: true });
+	const items = await api.items.getAll({ limit: 10 });
 
-	// Parallel fetching for better performance
-	const [userData, favorites] = await Promise.all([api.users.me(), api.favorites.getAll()]);
-
-	return { listings, categories, userData, favorites };
+	return { items };
 };
 ```
 
@@ -41,33 +37,30 @@ Located in `src/lib/api/`:
 - `client.ts` - Factory function that creates API client
 - `base.ts` - Base fetch wrapper with error handling
 - `auth.ts` - Authentication endpoints
-- `listings.ts` - Listings CRUD operations
-- `categories.ts` - Categories endpoints
-- `locations.ts` - Locations endpoints
-- `favorites.ts` - Favorites endpoints
+- `items.ts` - Example CRUD operations (replace with your modules)
 
 ## How API Methods Work
 
 **All API methods validate input** before sending:
 
 ```typescript
-// src/lib/api/listings.ts
-export function createListingsApi(fetch: typeof globalThis.fetch) {
+// src/lib/api/items.ts
+export function createItemsApi(fetch: typeof globalThis.fetch) {
 	return {
-		async create(data: unknown): Promise<ListingDetailResponse> {
-			// Validates using createListingSchema before sending
-			const validatedData = createListingSchema.parse(data);
+		async create(data: unknown): Promise<ItemResponse> {
+			// Validates using createItemSchema before sending
+			const validatedData = createItemSchema.parse(data);
 
-			return apiFetch<ListingDetailResponse>(fetch, '/api/listings', {
+			return apiFetch<ItemResponse>(fetch, '/api/items', {
 				method: 'POST',
 				body: JSON.stringify(validatedData)
 			});
 		},
 
-		async getAll(params?: ListingQuery): Promise<ApiListingsResponse> {
-			const validatedParams = params ? listingQuerySchema.parse(params) : {};
+		async getAll(params?: ItemQuery): Promise<ApiItemsResponse> {
+			const validatedParams = params ? itemQuerySchema.parse(params) : {};
 			const queryString = buildQueryString(validatedParams);
-			return apiFetch<ApiListingsResponse>(fetch, `/api/listings${queryString}`);
+			return apiFetch<ApiItemsResponse>(fetch, `/api/items${queryString}`);
 		}
 	};
 }
@@ -78,43 +71,33 @@ export function createListingsApi(fetch: typeof globalThis.fetch) {
 ### 1. Create Zod Schemas
 
 ```typescript
-// src/lib/types/comments.schemas.ts
-export const createCommentSchema = z.object({
-	listingId: uuidSchema,
-	content: z.string().min(1).max(500)
+// src/lib/types/features.schemas.ts
+export const createFeatureSchema = z.object({
+	name: z.string().min(1).max(100)
 });
 
-export const commentResponseSchema = z.object({
+export const featureResponseSchema = z.object({
 	id: uuidSchema,
-	listingId: uuidSchema,
-	userId: uuidSchema,
-	content: z.string(),
+	name: z.string(),
 	createdAt: z.coerce.date()
 });
-
-export type CreateComment = z.infer<typeof createCommentSchema>;
-export type CommentResponse = z.infer<typeof commentResponseSchema>;
 ```
 
 ### 2. Create API Client Module
 
 ```typescript
-// src/lib/api/comments.ts
-import { createCommentSchema, type CommentResponse } from '$lib/types/comments.schemas';
+// src/lib/api/features.ts
+import { createFeatureSchema, type FeatureResponse } from '$lib/types/features.schemas';
 import { apiFetch } from './base';
 
-export function createCommentsApi(fetch: typeof globalThis.fetch) {
+export function createFeaturesApi(fetch: typeof globalThis.fetch) {
 	return {
-		async create(data: unknown): Promise<CommentResponse> {
-			const validatedData = createCommentSchema.parse(data);
-			return apiFetch<CommentResponse>(fetch, '/api/comments', {
+		async create(data: unknown): Promise<FeatureResponse> {
+			const validatedData = createFeatureSchema.parse(data);
+			return apiFetch<FeatureResponse>(fetch, '/api/features', {
 				method: 'POST',
 				body: JSON.stringify(validatedData)
 			});
-		},
-
-		async getByListing(listingId: string): Promise<CommentResponse[]> {
-			return apiFetch<CommentResponse[]>(fetch, `/api/comments?listingId=${listingId}`);
 		}
 	};
 }
@@ -124,16 +107,13 @@ export function createCommentsApi(fetch: typeof globalThis.fetch) {
 
 ```typescript
 // src/lib/api/client.ts
-import { createCommentsApi } from './comments';
+import { createFeaturesApi } from './features';
 
 export function createApiClient(fetch: typeof globalThis.fetch) {
 	return {
 		auth: createAuthApi(fetch),
-		listings: createListingsApi(fetch),
-		categories: createCategoriesApi(fetch),
-		locations: createLocationsApi(fetch),
-		favorites: createFavoritesApi(fetch),
-		comments: createCommentsApi(fetch) // Add new API
+		items: createItemsApi(fetch),
+		features: createFeaturesApi(fetch) // Add new API
 	};
 }
 ```
@@ -141,8 +121,8 @@ export function createApiClient(fetch: typeof globalThis.fetch) {
 ### 4. Create Backend API Route
 
 ```typescript
-// src/routes/api/comments/+server.ts
-import { createCommentSchema } from '$lib/types/comments.schemas';
+// src/routes/api/features/+server.ts
+import { createFeatureSchema } from '$lib/types/features.schemas';
 import { ApiError, ApiSuccess } from '$lib/server/errors';
 import { withApiLogging } from '$lib/server/logger/middleware';
 
@@ -151,18 +131,17 @@ export async function POST(event) {
 		event,
 		async ({ requestId }) => {
 			const body = await event.request.json();
-			const result = createCommentSchema.safeParse(body);
+			const result = createFeatureSchema.safeParse(body);
 
 			if (!result.success) {
 				return ApiError.fromZod(result.error, requestId);
 			}
 
-			// Create comment in database
-			const [comment] = await db.insert(comments).values(result.data).returning();
+			const [feature] = await db.insert(features).values(result.data).returning();
 
-			return ApiSuccess.created(comment, { requestId });
+			return ApiSuccess.created(feature, { requestId });
 		},
-		{ operation: 'CREATE_COMMENT', schema: 'app' }
+		{ operation: 'CREATE_FEATURE', schema: 'app' }
 	);
 }
 ```
@@ -179,33 +158,6 @@ export async function POST(event) {
 - [ ] Remove manual error handling (client handles it)
 - [ ] Update type annotations to use schema-inferred types
 - [ ] Test the endpoint
-
-### Example Migration
-
-**Before (raw fetch):**
-
-```typescript
-export const load: PageServerLoad = async ({ fetch, params }) => {
-	const response = await fetch(`/api/listings/${params.id}`);
-	if (!response.ok) {
-		throw error(404, 'Listing not found');
-	}
-	const listing = await response.json();
-	return { listing };
-};
-```
-
-**After (API client):**
-
-```typescript
-import { createApiClient } from '$lib/api/client';
-
-export const load: PageServerLoad = async ({ fetch, params }) => {
-	const api = createApiClient(fetch);
-	const listing = await api.listings.getById(params.id);
-	return { listing };
-};
-```
 
 ## Error Handling in API Client
 
@@ -247,7 +199,7 @@ Use `buildQueryString` helper for type-safe URL params:
 ```typescript
 import { buildQueryString } from '$lib/api/base';
 
-const params = { limit: 20, offset: 0, categoryId: '123' };
+const params = { limit: 20, offset: 0 };
 const queryString = buildQueryString(params);
-// Returns: "?limit=20&offset=0&categoryId=123"
+// Returns: "?limit=20&offset=0"
 ```

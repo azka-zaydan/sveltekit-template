@@ -1,6 +1,6 @@
 # Railway Deployment Guide
 
-Complete guide for deploying the YourApp Clone to Railway.app.
+Complete guide for deploying the Craigslist Clone to Railway.app.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Complete guide for deploying the YourApp Clone to Railway.app.
 1. Go to [Railway.app](https://railway.app/)
 2. Click **"New Project"**
 3. Select **"Deploy from GitHub repo"**
-4. Choose your `your-project` repository
+4. Choose your `craigslist-dupe` repository
 5. Railway will detect the Dockerfile automatically
 
 ### Step 2: Add PostgreSQL Database

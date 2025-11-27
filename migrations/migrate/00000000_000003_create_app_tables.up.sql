@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS app.items (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES auth.user(id) ON DELETE CASCADE,
+	name VARCHAR(255) NOT NULL,
+	description TEXT,
+	is_active BOOLEAN DEFAULT true NOT NULL,
+	created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+	updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);

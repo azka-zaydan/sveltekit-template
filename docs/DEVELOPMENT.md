@@ -5,35 +5,30 @@
 ## Project Structure
 
 ```
-your-project/
+project/
 ├── src/
 │   ├── lib/
+│   │   ├── api/               # API client functions
 │   │   ├── components/        # Reusable Svelte components
-│   │   │   ├── layout/        # Layout components (Navigation, Container, etc.)
-│   │   │   └── ui/            # UI primitives (Button, Card, Input, etc.)
+│   │   │   ├── ui/
+│   │   │   │   ├── common/    # Base/reusable components
+│   │   │   │   │   ├── actions/   # Button
+│   │   │   │   │   ├── display/   # Badge, Card
+│   │   │   │   │   └── forms/     # Input, Select, Textarea, FormError
+│   │   │   │   └── layout/    # Layout components
+│   │   │   └── index.ts       # Component exports
 │   │   ├── server/            # Server-only code
 │   │   │   ├── auth.ts        # Lucia authentication
+│   │   │   ├── errors.ts      # Error handling
+│   │   │   ├── logger/        # Winston logging
 │   │   │   ├── rate-limit.ts  # Rate limiting utilities
 │   │   │   └── db/            # Database layer
 │   │   │       ├── index.ts   # Database client
-│   │   │       └── schema.ts  # Drizzle schema definitions
+│   │   │       └── schema/    # Drizzle schema definitions
+│   │   ├── types/             # Zod schemas & inferred types
 │   │   └── utils/             # Shared utilities
-│   │       ├── format.ts      # Formatting helpers
-│   │       └── image.ts       # Image utilities
 │   ├── routes/
 │   │   ├── api/               # API endpoints
-│   │   │   ├── auth/          # Auth endpoints (login, register, logout)
-│   │   │   ├── categories/    # Categories API
-│   │   │   ├── favorites/     # Favorites API
-│   │   │   ├── listings/      # Listings CRUD API
-│   │   │   ├── locations/     # Locations API
-│   │   │   └── users/         # Users API
-│   │   ├── categories/[slug]/ # Category browse pages
-│   │   ├── dashboard/         # User dashboard
-│   │   ├── demo/              # Demo pages
-│   │   ├── listings/          # Listing pages
-│   │   │   ├── [id]/          # Listing detail
-│   │   │   └── new/           # Create listing
 │   │   ├── +layout.server.ts  # Root layout server load
 │   │   ├── +layout.svelte     # Root layout
 │   │   ├── +page.server.ts    # Homepage server load
@@ -61,22 +56,72 @@ your-project/
 
 ## Component Organization
 
-### Layout Components (`src/lib/components/layout/`)
+### Common UI Components (`src/lib/components/ui/common/`)
 
-Structural components for page layout:
+Base/reusable components organized by purpose:
+
+**Actions**:
+
+- **Button.svelte** - Primary, secondary, danger, and link button variants
+
+**Display**:
+
+- **Badge.svelte** - Status badges and labels
+- **Card.svelte** - Container component with optional border
+
+**Forms**:
+
+- **Input.svelte** - Text input with label and error support
+- **Select.svelte** - Dropdown with options support
+- **Textarea.svelte** - Multiline text input with character counter
+- **FormError.svelte** - Consistent error message display
+
+**Layout** (`src/lib/components/ui/layout/`):
 
 - **Container.svelte** - Max-width container with responsive padding
 - **Navigation.svelte** - Main navigation bar with auth state
-- **PageHeader.svelte** - Consistent page headers
+- **PageHeader.svelte** - Page headers with breadcrumbs
 
-### UI Components (`src/lib/components/ui/`)
+## Path Aliases
 
-Reusable UI primitives:
+The project uses SvelteKit path aliases for cleaner imports:
 
-- **Badge.svelte** - Colored badge for categories, status, etc.
-- **Button.svelte** - Primary, secondary, and text button variants
-- **Card.svelte** - Elevated card container
-- **Input.svelte** - Styled form input with label support
+```typescript
+// Components
+import { Button, Input } from '$components'; // From index.ts
+import Button from '$ui/common/actions/Button.svelte'; // Direct import
+import Navigation from '$ui/layout/Navigation.svelte';
+
+// API Client
+import { createApiClient } from '$api/client';
+
+// Types & Schemas
+import type { Item } from '$types/app.schemas';
+import { itemSchema } from '$types/app.schemas';
+
+// Server-only
+import { db } from '$db';
+import { items, user } from '$schema';
+import { ApiError } from '$server/errors';
+import { log } from '$server/logger';
+
+// Utils
+import { formatDate } from '$utils/format';
+```
+
+**Available aliases** (configured in `svelte.config.js`):
+
+- `$components` → `src/lib/components`
+- `$ui` → `src/lib/components/ui`
+- `$ui/layout` → `src/lib/components/ui/layout`
+- `$api` → `src/lib/api`
+- `$types` → `src/lib/types`
+- `$server` → `src/lib/server`
+- `$db` → `src/lib/server/db`
+- `$schema` → `src/lib/server/db/schema`
+- `$utils` → `src/lib/utils`
+
+All aliases support wildcard variants (e.g., `$api/*`).
 
 ## Svelte 5 Patterns
 
@@ -173,11 +218,11 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch, locals }) => {
 	// Server-side data fetching
-	const res = await fetch('/api/listings');
+	const res = await fetch('/api/items');
 	const data = await res.json();
 
 	return {
-		listings: data.listings,
+		items: data.items,
 		user: locals.user // From hooks.server.ts
 	};
 };
@@ -211,7 +256,7 @@ export const actions: Actions = {
 ### API Routes
 
 ```typescript
-// src/routes/api/listings/+server.ts
+// src/routes/api/items/+server.ts
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
@@ -220,9 +265,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const limit = parseInt(url.searchParams.get('limit') ?? '20');
 	const offset = parseInt(url.searchParams.get('offset') ?? '0');
 
-	const listings = await db.select().from(listings).limit(limit).offset(offset);
+	const items = await db.select().from(items).limit(limit).offset(offset);
 
-	return json({ listings });
+	return json({ items });
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -231,7 +276,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const data = await request.json();
-	// ... create listing
+	// ... create item
 
 	return json({ success: true }, { status: 201 });
 };
@@ -242,46 +287,33 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 ### Querying
 
 ```typescript
-import { db } from '$lib/server/db';
-import { listings, categories, user } from '$lib/server/db/schema';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { db } from '$db';
+import { items, user } from '$schema';
+import { eq, and } from 'drizzle-orm';
 
 // Simple select
-const allListings = await db.select().from(listings);
+const allItems = await db.select().from(items);
 
 // With conditions
-const activeListings = await db.select().from(listings).where(eq(listings.isActive, true));
+const activeItems = await db.select().from(items).where(eq(items.isActive, true));
 
 // With joins (cross-schema)
-const listingsWithCategories = await db
-	.select()
-	.from(listings)
-	.leftJoin(categories, eq(listings.categoryId, categories.id))
-	.leftJoin(user, eq(listings.userId, user.id));
-
-// Complex filters
-const filteredListings = await db
-	.select()
-	.from(listings)
-	.where(and(eq(listings.isActive, true), gte(listings.price, 100), lte(listings.price, 1000)));
+const itemsWithUser = await db.select().from(items).leftJoin(user, eq(items.userId, user.id));
 ```
 
 ### Inserting
 
 ```typescript
 // Insert single record
-await db.insert(listings).values({
+await db.insert(items).values({
 	userId: user.id,
-	categoryId: category.id,
-	locationId: location.id,
-	title: 'New Listing',
-	description: 'Description here',
-	price: '99.99'
+	name: 'New Item',
+	description: 'Description here'
 });
 
 // Insert with returning
-const [newListing] = await db
-	.insert(listings)
+const [newItem] = await db
+	.insert(items)
 	.values({
 		/* ... */
 	})
@@ -292,18 +324,18 @@ const [newListing] = await db
 
 ```typescript
 await db
-	.update(listings)
+	.update(items)
 	.set({
-		title: 'Updated Title',
+		name: 'Updated Name',
 		updatedAt: new Date()
 	})
-	.where(eq(listings.id, listingId));
+	.where(eq(items.id, itemId));
 ```
 
 ### Deleting
 
 ```typescript
-await db.delete(listings).where(eq(listings.id, listingId));
+await db.delete(items).where(eq(items.id, itemId));
 ```
 
 ## Authentication Flow
@@ -472,7 +504,7 @@ npm run generate:migration     # Generate new migration
 npm run db:studio
 
 # Or use Docker
-docker exec -it your-project-db-1 psql -U root -d craigslist_dupe
+docker exec -it project-db psql -U root -d project_db
 
 # Check specific schema
 \dt auth.*
@@ -512,17 +544,17 @@ Let TypeScript and Drizzle infer types:
 
 ```typescript
 // ✅ Inferred types
-const listing = await db.select().from(listings).where(eq(listings.id, id));
+const item = await db.select().from(items).where(eq(items.id, id));
 
 // ❌ Manual types (unnecessary)
-const listing: Listing = await db.select().from(listings).where(eq(listings.id, id));
+const item: Item = await db.select().from(items).where(eq(items.id, id));
 ```
 
 ## Best Practices
 
 1. **Use Svelte 5 runes** - no more `export let` or `$:` reactive statements
 2. **Server-side validation** - never trust client input
-3. **Schema-qualified queries** - always use `auth.user`, `app.listings`, etc.
+3. **Schema-qualified queries** - always use `auth.user`, `app.items`, etc.
 4. **Type-safe routes** - use generated `$types` from SvelteKit
 5. **Consistent naming** - camelCase for JS/TS, kebab-case for routes/files
 6. **Component composition** - keep components small and focused

@@ -1,5 +1,6 @@
 {
 	"name": "sveltekit-template",
+	"description": "A comprehensive SvelteKit template with Lucia, Drizzle ORM, Tailwind CSS, and Winston logger.",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",

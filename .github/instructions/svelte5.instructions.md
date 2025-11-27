@@ -125,7 +125,7 @@
 
 ```svelte
 <script lang="ts">
-	import Card from '$lib/components/Card.svelte';
+	import Card from '$ui/common/display/Card.svelte';
 	let { items } = $props();
 </script>
 
@@ -198,12 +198,12 @@
 ```svelte
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import type { Listing } from '$lib/types/app.schemas';
+	import type { Item } from '$lib/types/app.schemas';
 
 	let { data }: PageProps = $props();
 
 	// Type-safe derived values
-	const listings = $derived(data.listings as Listing[]);
+	const items = $derived(data.items as Item[]);
 </script>
 ```
 
@@ -254,8 +254,8 @@
 	// No need for onMount or async logic
 </script>
 
-{#each data.listings as listing (listing.id)}
-	<div>{listing.title}</div>
+{#each data.items as item (item.id)}
+	<div>{item.title}</div>
 {/each}
 ```
 

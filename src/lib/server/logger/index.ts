@@ -3,18 +3,19 @@ import { createTransports, getLogLevel } from './config';
 import { getLogFormat } from './formatters';
 
 /**
- * Winston logger instance
- * Uses npm log levels: silly, debug, verbose, http, info, warn, error
+ * Main Winston logger instance
+ * Server-only - never imported on client side
  */
-const logger = winston.createLogger({
+export const logger = winston.createLogger({
 	level: getLogLevel(),
-	levels: winston.config.npm.levels,
-	format: getLogFormat(),
-	transports: createTransports()
+	levels: winston.config.npm.levels, // silly, debug, verbose, http, info, warn, error
+	format: getLogFormat(), // Apply format to the logger instance
+	transports: createTransports(),
+	exitOnError: false
 });
 
 /**
- * Structured log metadata interface
+ * Logger metadata interface for type safety
  */
 export interface LogMetadata {
 	requestId?: string;
@@ -34,80 +35,51 @@ export interface LogMetadata {
  * Type-safe logging helpers
  */
 export const log = {
-	error: (message: string, meta?: LogMetadata | Error): void => {
+	error: (message: string, meta?: LogMetadata | Error) => {
 		if (meta instanceof Error) {
-			logger.error(message, {
-				error: meta.message,
-				stack: meta.stack
-			});
+			logger.error(message, { error: meta, stack: meta.stack });
 		} else {
 			logger.error(message, meta);
 		}
 	},
-
-	warn: (message: string, meta?: LogMetadata): void => {
-		logger.warn(message, meta);
-	},
-
-	info: (message: string, meta?: LogMetadata): void => {
-		logger.info(message, meta);
-	},
-
-	http: (message: string, meta?: LogMetadata): void => {
-		logger.http(message, meta);
-	},
-
-	debug: (message: string, meta?: LogMetadata): void => {
-		logger.debug(message, meta);
-	}
+	warn: (message: string, meta?: LogMetadata) => logger.warn(message, meta),
+	info: (message: string, meta?: LogMetadata) => logger.info(message, meta),
+	http: (message: string, meta?: LogMetadata) => logger.http(message, meta),
+	debug: (message: string, meta?: LogMetadata) => logger.debug(message, meta)
 };
 
 /**
- * Log slow database queries
- * Warns if query duration exceeds threshold
+ * Helper to log slow database queries
  */
-export function logSlowQuery(
-	queryName: string,
-	duration: number,
-	threshold = 1000,
-	meta?: LogMetadata
-): void {
+export function logSlowQuery(queryName: string, duration: number, threshold = 1000) {
 	if (duration > threshold) {
-		log.warn(`Slow query detected: ${queryName}`, {
-			...meta,
+		logger.warn('Slow query detected', {
+			operation: 'SLOW_QUERY',
+			queryName,
 			duration,
-			threshold,
-			queryName
-		});
-	} else {
-		log.debug(`Query completed: ${queryName}`, {
-			...meta,
-			duration,
-			queryName
+			threshold
 		});
 	}
 }
 
 /**
- * Log database migrations
+ * Helper to log migration operations
  */
 export function logMigration(
 	action: 'UP' | 'DOWN',
 	filename: string,
 	duration: number,
-	success: boolean,
-	meta?: LogMetadata
-): void {
+	success: boolean
+) {
 	const level = success ? 'info' : 'error';
-	const message = `Migration ${action}: ${filename} ${success ? 'succeeded' : 'failed'}`;
-
-	logger.log(level, message, {
-		...meta,
-		duration,
-		action,
+	logger.log(level, `Migration ${action.toLowerCase()}: ${filename}`, {
+		operation: `MIGRATION_${action}`,
+		schema: 'public',
 		filename,
+		duration,
 		success
 	});
 }
 
+// Export logger instance as default
 export default logger;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
-	import { createApiClient } from '$api/client';
+	import { createApiClient } from '$lib/api/client';
 
 	let user = $derived(page.data.user);
 	let isLoggingOut = $state(false);
@@ -30,7 +30,7 @@
 
 <header class="mb-6 pb-4 border-b border-gray-300">
 	<div class="flex items-center justify-between">
-		<a href="/" class="text-3xl font-bold text-purple-700">your app</a>
+		<a href="/" class="text-3xl font-bold text-purple-700">SvelteKit Template</a>
 		<div class="text-sm">
 			{#if user}
 				<span class="text-gray-700">Hi, {user.username}</span>
@@ -40,7 +40,7 @@
 				<button
 					onclick={handleLogout}
 					disabled={isLoggingOut}
-					class="text-blue-600 hover:underline"
+					class="text-blue-600 hover:underline cursor-pointer"
 				>
 					{isLoggingOut ? 'logging out...' : 'log out'}
 				</button>
@@ -52,6 +52,8 @@
 				<span class="mx-2">|</span>
 				<a href="/register" class="text-blue-600 hover:underline">sign up</a>
 			{/if}
+			<span class="mx-2">|</span>
+			<a href="/items/new" class="text-blue-600 hover:underline font-semibold">create item</a>
 		</div>
 	</div>
 </header>

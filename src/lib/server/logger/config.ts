@@ -3,71 +3,63 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 /**
- * Get log level from environment or default based on NODE_ENV
+ * Get log level from environment or default to 'info'
  */
 export function getLogLevel(): string {
-	if (env.LOG_LEVEL) {
-		return env.LOG_LEVEL;
-	}
-	return env.NODE_ENV === 'production' ? 'info' : 'debug';
+	return env.LOG_LEVEL || (env.NODE_ENV === 'production' ? 'info' : 'debug');
 }
 
 /**
  * Create Winston transports based on environment configuration
- * Always includes console transport, optionally adds file transports
  */
 export function createTransports(): winston.transport[] {
 	const transports: winston.transport[] = [];
+	const logToFile = env.LOG_TO_FILE === 'true';
+	const logDir = env.LOG_DIR || 'logs';
 
-	// Console transport - always enabled
+	// Console transport (always enabled)
+	// Note: format is inherited from the logger instance
 	transports.push(
 		new winston.transports.Console({
 			level: getLogLevel()
 		})
 	);
 
-	// File transports - only if LOG_TO_FILE is enabled
-	if (env.LOG_TO_FILE === 'true') {
-		const logDir = env.LOG_DIR || 'logs';
-		const maxSize = env.LOG_MAX_SIZE || '10m';
-		const maxFiles = env.LOG_MAX_FILES || '7d';
-
+	// File transports (only if enabled)
+	if (logToFile) {
 		// Combined logs (all levels)
 		transports.push(
 			new DailyRotateFile({
-				level: getLogLevel(),
-				dirname: logDir,
-				filename: 'combined-%DATE%.log',
+				filename: `${logDir}/combined-%DATE%.log`,
 				datePattern: 'YYYY-MM-DD',
-				maxSize,
-				maxFiles,
-				format: winston.format.combine(winston.format.timestamp(), winston.format.json())
+				maxSize: env.LOG_MAX_SIZE || '10m',
+				maxFiles: env.LOG_MAX_FILES || '7d',
+				format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+				level: getLogLevel()
 			})
 		);
 
-		// Error logs (error level only, longer retention)
+		// Error logs (errors only)
 		transports.push(
 			new DailyRotateFile({
-				level: 'error',
-				dirname: logDir,
-				filename: 'error-%DATE%.log',
+				filename: `${logDir}/error-%DATE%.log`,
 				datePattern: 'YYYY-MM-DD',
-				maxSize,
-				maxFiles: '14d', // Keep error logs longer
-				format: winston.format.combine(winston.format.timestamp(), winston.format.json())
+				maxSize: env.LOG_MAX_SIZE || '10m',
+				maxFiles: env.LOG_MAX_FILES || '14d', // Keep errors longer
+				format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+				level: 'error'
 			})
 		);
 
-		// HTTP logs (http level only)
+		// HTTP/API logs (separate file for easier analysis)
 		transports.push(
 			new DailyRotateFile({
-				level: 'http',
-				dirname: logDir,
-				filename: 'http-%DATE%.log',
+				filename: `${logDir}/http-%DATE%.log`,
 				datePattern: 'YYYY-MM-DD',
-				maxSize,
-				maxFiles,
-				format: winston.format.combine(winston.format.timestamp(), winston.format.json())
+				maxSize: env.LOG_MAX_SIZE || '10m',
+				maxFiles: env.LOG_MAX_FILES || '7d',
+				format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+				level: 'http'
 			})
 		);
 	}

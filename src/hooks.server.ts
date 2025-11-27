@@ -1,6 +1,6 @@
-import * as auth from '$lib/server/auth';
-import { log } from '$lib/server/logger';
-import { generateRequestId } from '$lib/server/logger/middleware';
+import * as auth from '$server/auth';
+import { log } from '$server/logger';
+import { generateRequestId } from '$server/logger/middleware';
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 

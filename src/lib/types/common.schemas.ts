@@ -105,6 +105,20 @@ export const slugSchema = z
 // ============================================================================
 
 /**
+ * Price validation (decimal with 2 decimal places)
+ * Allows null for items without a price (e.g., "free", "trade")
+ */
+export const priceSchema = z
+	.string()
+	.regex(/^\d+(\.\d{1,2})?$/, {
+		error: 'Price must be a valid decimal number with up to 2 decimal places'
+	})
+	.refine((val) => parseFloat(val) >= 0, { error: 'Price must be non-negative' })
+	.refine((val) => parseFloat(val) <= 99999999.99, { error: 'Price must be less than 100 million' })
+	.optional()
+	.nullable();
+
+/**
  * Positive integer validation
  */
 export const positiveIntSchema = z.number().int().positive();
@@ -186,10 +200,84 @@ export const futureDateSchema = z.date().refine((date) => date > new Date(), {
 });
 
 // ============================================================================
-// IMAGE/MEDIA
+// TEXT CONTENT
+// ============================================================================
+
+/**
+ * Short text field (titles, names, etc.)
+ */
+export const shortTextSchema = z
+	.string()
+	.min(1, { error: 'This field is required' })
+	.max(255, { error: 'Text must be less than 255 characters' })
+	.trim();
+
+/**
+ * Long text field (descriptions, comments, etc.)
+ */
+export const longTextSchema = z
+	.string()
+	.min(1, { error: 'This field is required' })
+	.max(10000, { error: 'Text must be less than 10,000 characters' })
+	.trim();
+
+/**
+ * Optional long text
+ */
+export const optionalLongTextSchema = longTextSchema.optional().nullable();
+
+// ============================================================================
+// IMAGE/FILE VALIDATION
 // ============================================================================
 
 /**
  * Image URL validation
  */
-export const imageUrlSchema = urlSchema;
+export const imageUrlSchema = z
+	.string()
+	.url({ message: 'Invalid image URL' })
+	.max(500, { error: 'Image URL must be less than 500 characters' })
+	.refine(
+		(url) => {
+			// Basic image extension check
+			const imageExtensions = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+			return imageExtensions.test(url);
+		},
+		{ error: 'URL must point to a valid image file' }
+	);
+
+/**
+ * Display order for sorted items (images, etc.)
+ */
+export const displayOrderSchema = z.number().int().min(0).default(0);
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Create an optional version of any schema
+ */
+export function makeOptional<T extends z.ZodTypeAny>(schema: T) {
+	return schema.optional().nullable();
+}
+
+/**
+ * Create a partial version of any object schema (all fields optional)
+ */
+export function makePartial<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
+	return schema.partial();
+}
+
+// ============================================================================
+// TYPE EXPORTS
+// ============================================================================
+
+export type UUID = z.infer<typeof uuidSchema>;
+export type Email = z.infer<typeof emailSchema>;
+export type PhoneNumber = z.infer<typeof phoneNumberSchema>;
+export type Username = z.infer<typeof usernameSchema>;
+export type Password = z.infer<typeof passwordSchema>;
+export type Slug = z.infer<typeof slugSchema>;
+export type Price = z.infer<typeof priceSchema>;
+export type SortOrder = z.infer<typeof sortOrderSchema>;

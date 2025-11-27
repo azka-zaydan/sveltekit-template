@@ -42,11 +42,10 @@ import { logTransaction } from '$lib/server/logger/db';
 
 const result = await logTransaction(
 	db,
-	'create_listing_with_images',
+	'create_item',
 	async (tx) => {
-		const listing = await tx.insert(listings).values(data).returning();
-		await tx.insert(images).values(imageData);
-		return listing[0];
+		const item = await tx.insert(items).values(data).returning();
+		return item[0];
 	},
 	{ requestId, schema: 'app' }
 );
@@ -67,7 +66,7 @@ log.debug('Debug info', { step: 1 }); // Filtered in production
 
 - `log.error()` - Errors with stack traces
 - `log.warn()` - Slow queries, 4xx responses
-- `log.info()` - Business events (user created, listing posted)
+- `log.info()` - Business events (user created, item created)
 - `log.http()` - HTTP requests/responses (auto-handled by hooks)
 - `log.debug()` - Verbose debugging (filtered in production)
 
@@ -133,15 +132,13 @@ const data = await withQueryLogging('query_name', () => db.select().from(table),
 Every request gets a unique `requestId` that appears in all logs:
 
 ```
-[2025-11-25 10:30:15] info: HTTP GET /api/listings [req-123456]
-[2025-11-25 10:30:15] info: DB query: get_listings completed in 45ms [req-123456]
-[2025-11-25 10:30:15] info: HTTP GET /api/listings → 200 (78ms) [req-123456]
+[2025-11-25 10:30:15] info: HTTP GET /api/items [req-123456]
+[2025-11-25 10:30:15] info: DB query: get_items completed in 45ms [req-123456]
+[2025-11-25 10:30:15] info: HTTP GET /api/items → 200 (78ms) [req-123456]
 ```
 
 Use `requestId` to trace all operations for a single request.
 
 ## See Also
 
-- `/docs/LOGGER_SUMMARY.md` - Overview
-- `/docs/LOGGER_WRAPPERS.md` - Detailed usage
-- `/docs/LOGGER_FIXES.md` - Recent changes
+- `/docs/LOGGER.md` - Detailed usage

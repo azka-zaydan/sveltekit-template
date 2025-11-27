@@ -2,7 +2,7 @@
 
 > **Note**: For AI agent guidance on debugging workflows, see [`.github/instructions/workflows.instructions.md`](../.github/instructions/workflows.instructions.md)
 
-Complete guide to debugging the YourApp Clone application during development and production.
+Complete guide to debugging the Craigslist Clone application during development and production.
 
 ## Table of Contents
 
@@ -297,7 +297,7 @@ npm run migrate:down
 npm run migrate:up
 
 # Check migration history
-docker exec -it your-project-db psql -U root -d craigslist_dupe
+docker exec -it craigslist-dupe-db psql -U root -d craigslist_dupe
 SELECT * FROM public.migration_history ORDER BY executed_at DESC;
 ```
 
@@ -372,7 +372,7 @@ Opens at `http://localhost:4983` with:
 Connect directly to database:
 
 ```bash
-docker exec -it your-project-db psql -U root -d craigslist_dupe
+docker exec -it craigslist-dupe-db psql -U root -d craigslist_dupe
 ```
 
 **Useful commands**:
@@ -481,7 +481,7 @@ curl -b cookies.txt http://localhost:5173/api/users/me
 Import this collection structure:
 
 ```
-YourApp Clone API
+Craigslist Clone API
 ├── Auth
 │   ├── POST /api/auth/register
 │   ├── POST /api/auth/login

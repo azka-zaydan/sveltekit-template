@@ -1,33 +1,34 @@
-# UI Design & Components (Template)
+# UI Design & Components (CRITICAL - MANDATORY)
 
 > **See also**: [`/docs/UI_STYLE_GUIDE.md`](../../docs/UI_STYLE_GUIDE.md) and [`/docs/COMPONENTS.md`](../../docs/COMPONENTS.md)
 
-**Note**: This template provides a basic UI design pattern. Customize according to your project needs.
+**Critical**: This project follows specific design guidelines. ALL UI components and pages MUST follow this design language.
 
 ## Design Philosophy
 
-**Minimalism & Consistency** - Clean, functional design with consistent patterns.
+**Radical Minimalism** - If it doesn't serve a function, remove it.
 
 ### Core Principles
 
-1. **Clean aesthetics**: Consistent shadows, borders, and spacing
-2. **Simple borders**: Use `border-gray-300` for standard borders
-3. **Readable links**: Use `text-blue-600 hover:underline` or project-specific colors
-4. **Brand colors**: Define your primary brand color (e.g., `purple-700`)
-5. **Appropriate text sizes**: Use Tailwind's text scale appropriately
-6. **Consistent rounding**: Choose `rounded`, `rounded-md`, or `rounded-lg` and stick with it
-7. **White or light backgrounds**: Clean, readable base
+1. **NO modern flourishes**: No shadows, gradients, fancy transitions, or animations
+2. **Simple borders**: Use `border-gray-300` for everything
+3. **Classic blue links**: ALWAYS `text-blue-600 hover:underline`
+4. **Purple branding**: `purple-700` for primary actions and branding
+5. **Small text**: `text-sm` is the default for most content
+6. **No rounded corners**: Minimal `rounded` if needed (not `rounded-lg`)
+7. **White background**: Plain white, no colored backgrounds
 
 ## Mandatory Styling Rules
 
-### Links (Standard Pattern)
+### Links (ALWAYS)
 
 ```html
-<!-- ✅ RECOMMENDED -->
+<!-- ✅ CORRECT -->
 <a href="/path" class="text-blue-600 hover:underline">link text</a>
 
-<!-- Or use your brand color -->
-<a href="/path" class="text-purple-600 hover:text-purple-700">link text</a>
+<!-- ❌ WRONG -->
+<a href="/path" class="text-purple-600">link text</a>
+<a href="/path" class="underline">link text</a>
 ```
 
 ### Borders (ALWAYS)
@@ -91,14 +92,14 @@ text-sm - DEFAULT for body text, buttons, inputs text-xs - Metadata, captions
 
 Located in `src/lib/components/`:
 
-**UI Components** (`ui/`):
+**Common UI Components** (`ui/common/`):
 
-- `Button.svelte` - All buttons
-- `Input.svelte` - All form inputs
-- `Card.svelte` - Bordered containers
-- `Badge.svelte` - Status labels
+- `Button.svelte` (`ui/common/actions/`) - All buttons
+- `Input.svelte` (`ui/common/forms/`) - All form inputs
+- `Card.svelte` (`ui/common/display/`) - Bordered containers
+- `Badge.svelte` (`ui/common/display/`) - Status labels
 
-**Layout Components** (`layout/`):
+**Layout Components** (`ui/layout/`):
 
 - `Navigation.svelte` - Site header
 - `Container.svelte` - Max-width containers
@@ -108,7 +109,9 @@ Located in `src/lib/components/`:
 
 ```svelte
 <script>
-	import Button from '$lib/components/ui/Button.svelte';
+	import Button from '$ui/common/actions/Button.svelte';
+	// Or use index export:
+	// import { Button } from '$components';
 </script>
 
 <!-- Primary action -->
@@ -135,7 +138,9 @@ Located in `src/lib/components/`:
 
 ```svelte
 <script>
-	import Input from '$lib/components/ui/Input.svelte';
+	import Input from '$ui/common/forms/Input.svelte';
+	// Or use index export:
+	// import { Input } from '$components';
 
 	let email = $state('');
 </script>
@@ -151,7 +156,9 @@ Located in `src/lib/components/`:
 
 ```svelte
 <script>
-	import Card from '$lib/components/ui/Card.svelte';
+	import Card from '$ui/common/display/Card.svelte';
+	// Or use index export:
+	// import { Card } from '$components';
 </script>
 
 <!-- Default (with border) -->
@@ -174,7 +181,9 @@ Located in `src/lib/components/`:
 
 ```svelte
 <script>
-	import Navigation from '$lib/components/layout/Navigation.svelte';
+	import Navigation from '$ui/layout/Navigation.svelte';
+	// Or use index export:
+	// import { Navigation } from '$components';
 </script>
 
 <!-- Simple header with logo and links -->
@@ -183,10 +192,10 @@ Located in `src/lib/components/`:
 
 Auto-displays:
 
-- Purple "craigslist" logo
+- Logo
 - User greeting (if logged in)
 - Login/signup links (if not logged in)
-- "post to classifieds" link
+- Action link (e.g., "post")
 - Logout button with loading state
 
 ## Common Patterns
@@ -195,7 +204,7 @@ Auto-displays:
 
 ```svelte
 <script>
-	import Navigation from '$lib/components/layout/Navigation.svelte';
+	import Navigation from '$ui/layout/Navigation.svelte';
 </script>
 
 <div class="min-h-screen bg-white">
@@ -214,8 +223,10 @@ Auto-displays:
 
 ```svelte
 <script>
-	import Input from '$lib/components/ui/Input.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$ui/common/forms/Input.svelte';
+	import Button from '$ui/common/actions/Button.svelte';
+	// Or use index exports:
+	// import { Input, Button } from '$components';
 
 	let email = $state('');
 	let password = $state('');
@@ -243,52 +254,18 @@ Auto-displays:
 
 ```svelte
 <div class="space-y-2">
-	{#each listings as listing (listing.id)}
+	{#each items as item (item.id)}
 		<div class="py-2 border-b border-gray-200">
-			<a href="/listings/{listing.id}" class="text-blue-600 hover:underline">
-				{listing.title}
+			<a href="/items/{item.id}" class="text-blue-600 hover:underline">
+				{item.title}
 			</a>
 			<div class="text-sm text-gray-600">
-				<span class="font-semibold">${listing.price}</span>
+				<span class="font-semibold">${item.price}</span>
 				<span class="mx-2">·</span>
-				<span>{listing.location.city}</span>
+				<span>{item.location}</span>
 				<span class="mx-2">·</span>
-				<span>{formatDate(listing.createdAt)}</span>
+				<span>{formatDate(item.createdAt)}</span>
 			</div>
-		</div>
-	{/each}
-</div>
-```
-
-### Breadcrumbs
-
-```svelte
-<nav class="mb-4 text-sm text-gray-600">
-	<a href="/" class="text-blue-600 hover:underline">home</a>
-	<span class="mx-2">›</span>
-	<a href="/categories/electronics" class="text-blue-600 hover:underline"> electronics </a>
-	<span class="mx-2">›</span>
-	<span class="text-gray-900">smartphones</span>
-</nav>
-```
-
-### Grid Layout
-
-```svelte
-<!-- Category grid (3 columns on desktop) -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-	{#each categories as category (category.id)}
-		<div>
-			<h2 class="font-bold text-lg mb-2">{category.name}</h2>
-			<ul class="space-y-1">
-				{#each category.children as child (child.id)}
-					<li>
-						<a href="/categories/{child.slug}" class="text-sm text-blue-600 hover:underline">
-							{child.name}
-						</a>
-					</li>
-				{/each}
-			</ul>
 		</div>
 	{/each}
 </div>
@@ -354,7 +331,7 @@ Auto-displays:
 
 ```html
 <!-- ✅ CORRECT -->
-<input placeholder="search craigslist" />
+<input placeholder="search" />
 <input placeholder="you@example.com" />
 <input placeholder="enter your email..." />
 
@@ -369,7 +346,7 @@ Auto-displays:
 
 **Purple (`purple-700`)** - ONLY for:
 
-- "craigslist" logo/brand
+- Logo/brand
 - Primary action buttons
 - Active state indicators (rare)
 
@@ -403,7 +380,7 @@ mb-2, mt-2  - Tight spacing
 
 /* List spacing */
 space-y-1  - Navigation links
-space-y-2  - Listing items
+space-y-2  - List items
 space-y-4  - Form fields
 
 /* Inline spacing */
@@ -440,18 +417,18 @@ Before committing UI changes, verify:
 
 ```svelte
 <div class="max-w-6xl mx-auto px-4 py-6">
-	<h1 class="text-2xl font-bold mb-6">My Listings</h1>
+	<h1 class="text-2xl font-bold mb-6">My Items</h1>
 
 	<div class="space-y-2">
-		{#each listings as listing (listing.id)}
+		{#each items as item (item.id)}
 			<div class="py-2 border-b border-gray-200">
-				<a href="/listings/{listing.id}" class="text-blue-600 hover:underline">
-					{listing.title}
+				<a href="/items/{item.id}" class="text-blue-600 hover:underline">
+					{item.title}
 				</a>
 				<div class="text-sm text-gray-600">
-					<span class="font-semibold">${listing.price}</span>
+					<span class="font-semibold">${item.price}</span>
 					<span class="mx-2">·</span>
-					<span>{listing.location}</span>
+					<span>{item.location}</span>
 				</div>
 			</div>
 		{/each}
@@ -466,24 +443,24 @@ Before committing UI changes, verify:
 	<h1
 		class="text-4xl font-extrabold mb-8 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent"
 	>
-		My Listings
+		My Items
 	</h1>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-		{#each listings as listing (listing.id)}
+		{#each items as item (item.id)}
 			<div
 				class="rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:scale-105"
 			>
 				<a
-					href="/listings/{listing.id}"
+					href="/items/{item.id}"
 					class="text-lg font-semibold text-purple-600 hover:text-purple-700"
 				>
-					{listing.title}
+					{item.title}
 				</a>
 				<div class="text-base text-gray-500 mt-2">
-					<span class="font-bold text-green-600">${listing.price}</span>
+					<span class="font-bold text-green-600">${item.price}</span>
 					<span class="mx-2">•</span>
-					<span>{listing.location}</span>
+					<span>{item.location}</span>
 				</div>
 			</div>
 		{/each}
@@ -496,7 +473,7 @@ Before committing UI changes, verify:
 **Ask yourself**:
 
 1. "Does this look like it could be from 1999?" - If no, simplify it
-2. "Would this look out of place on YourApp?" - If yes, remove it
+2. "Would this look out of place on the platform?" - If yes, remove it
 3. "Can I remove this style and it still works?" - Then remove it
 
-**Remember**: YourApp's design is legendary because it's timeless, functional, and gets out of the way. Embrace the minimalism.
+**Remember**: The design is legendary because it's timeless, functional, and gets out of the way. Embrace the minimalism.

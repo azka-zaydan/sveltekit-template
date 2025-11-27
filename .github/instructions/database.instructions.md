@@ -9,8 +9,8 @@
 ```typescript
 // src/lib/server/db/schema/*.schema.ts
 export const authSchema = pgSchema('auth'); // user, session, phone_verifications
-export const masterSchema = pgSchema('master'); // categories, locations
-export const appSchema = pgSchema('app'); // listings, listing_images, favorites
+export const masterSchema = pgSchema('master'); // reference data
+export const appSchema = pgSchema('app'); // core application data
 
 // Example table definition
 export const user = authSchema.table('user', {
@@ -19,7 +19,7 @@ export const user = authSchema.table('user', {
 	// ...
 });
 
-export const listings = appSchema.table('listings', {
+export const items = appSchema.table('items', {
 	id: uuid('id').defaultRandom().primaryKey(),
 	userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }) // Cross-schema FK
 	// ...
@@ -30,7 +30,7 @@ export const listings = appSchema.table('listings', {
 
 - **`auth`**: User authentication and session management
 - **`master`**: Reference data (categories, locations) - relatively static
-- **`app`**: Application transactional data (listings, images, favorites)
+- **`app`**: Application transactional data (items, etc.)
 - **`public`**: Migration tracking (`migration_history` table)
 
 **Why**: Security isolation, separate backup/restore strategies, easier permission management, logical data separation.
@@ -68,28 +68,25 @@ npm run db:studio            # Browse database with Drizzle Studio
 
 ### Migration Requirements
 
-1. **Schema qualification required**: Always use `auth.user`, `app.listings`, `master.categories` in SQL
+1. **Schema qualification required**: Always use `auth.user`, `app.items` in SQL
 2. **Idempotency**: Use `IF NOT EXISTS`, `IF EXISTS`, `ON CONFLICT DO NOTHING`
-3. **Cross-schema FKs work**: `REFERENCES auth.user(id)` from `app.listings` is valid
+3. **Cross-schema FKs work**: `REFERENCES auth.user(id)` from `app.items` is valid
 4. **First migration creates schemas**: `000000_create_schemas.up.sql` must run before all others
 
 ### Example Migration
 
 ```sql
--- migrations/migrate/20251124_000005_create_listings_table.up.sql
-CREATE TABLE IF NOT EXISTS app.listings (
+-- migrations/migrate/20251124_000005_create_items_table.up.sql
+CREATE TABLE IF NOT EXISTS app.items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.user(id) ON DELETE CASCADE,
-  category_id UUID NOT NULL REFERENCES master.categories(id),
-  title VARCHAR(255) NOT NULL,
-  description TEXT NOT NULL,
-  price DECIMAL(10, 2),
+  name VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- migrations/migrate/20251124_000005_create_listings_table.down.sql
-DROP TABLE IF EXISTS app.listings;
+-- migrations/migrate/20251124_000005_create_items_table.down.sql
+DROP TABLE IF EXISTS app.items;
 ```
 
 ## Database Schema Update Workflow
@@ -100,9 +97,9 @@ When adding new fields or tables:
 
 ```typescript
 // src/lib/server/db/schema/app.schema.ts
-export const listings = appSchema.table('listings', {
+export const items = appSchema.table('items', {
 	// ... existing fields
-	isPromoted: boolean('is_promoted').default(false).notNull() // NEW FIELD
+	isActive: boolean('is_active').default(true).notNull() // NEW FIELD
 });
 ```
 
@@ -110,39 +107,39 @@ export const listings = appSchema.table('listings', {
 
 ```typescript
 // src/lib/types/app.schemas.ts
-export const listingSchema = z.object({
+export const itemSchema = z.object({
 	// ... existing fields
-	isPromoted: z.boolean().default(false) // NEW FIELD
+	isActive: z.boolean().default(true) // NEW FIELD
 });
 
 // Update create/update schemas as needed
-export const updateListingSchema = z.object({
+export const updateItemSchema = z.object({
 	// ... existing fields
-	isPromoted: z.boolean().optional() // NEW FIELD
+	isActive: z.boolean().optional() // NEW FIELD
 });
 ```
 
 ### 3. Generate Migration
 
 ```bash
-npm run generate:migration -- --type=migrate --name=add_is_promoted_to_listings --schema=app
+npm run generate:migration -- --type=migrate --name=add_is_active_to_items --schema=app
 ```
 
 This creates:
 
-- `migrations/migrate/TIMESTAMP_add_is_promoted_to_listings.up.sql`
-- `migrations/migrate/TIMESTAMP_add_is_promoted_to_listings.down.sql`
+- `migrations/migrate/TIMESTAMP_add_is_active_to_items.up.sql`
+- `migrations/migrate/TIMESTAMP_add_is_active_to_items.down.sql`
 
 ### 4. Edit Migration Files
 
 ```sql
 -- .up.sql
-ALTER TABLE app.listings
-ADD COLUMN is_promoted BOOLEAN DEFAULT FALSE NOT NULL;
+ALTER TABLE app.items
+ADD COLUMN is_active BOOLEAN DEFAULT TRUE NOT NULL;
 
 -- .down.sql
-ALTER TABLE app.listings
-DROP COLUMN is_promoted;
+ALTER TABLE app.items
+DROP COLUMN is_active;
 ```
 
 ### 5. Run Migration
@@ -157,25 +154,24 @@ npm run migrate:up    # Apply migration
 Update any affected API endpoints to handle the new field:
 
 ```typescript
-// src/routes/api/listings/+server.ts
-const result = updateListingSchema.safeParse(body);
-// The new isPromoted field is now validated automatically
+// src/routes/api/items/+server.ts
+const result = updateItemSchema.safeParse(body);
+// The new isActive field is now validated automatically
 ```
 
 ## Database Queries
 
 ```typescript
 import { db } from '$lib/server/db';
-import { listings, categories, user } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { items, user } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
-// Cross-schema join (app.listings + master.categories + auth.user)
+// Cross-schema join
 const result = await db
 	.select()
-	.from(listings)
-	.leftJoin(categories, eq(listings.categoryId, categories.id))
-	.leftJoin(user, eq(listings.userId, user.id))
-	.where(eq(listings.isActive, true));
+	.from(items)
+	.leftJoin(user, eq(items.userId, user.id))
+	.where(eq(items.isActive, true));
 ```
 
 ## Common Pitfalls
@@ -196,7 +192,7 @@ npm run migrate:up
 npm run db:studio
 
 # Or use psql
-docker exec -it your-project-db psql -U root -d craigslist_dupe
+docker exec -it project-db psql -U root -d project_db
 \dn  # List schemas
 \dt auth.*  # List tables in auth schema
 ```

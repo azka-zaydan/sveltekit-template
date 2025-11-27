@@ -81,7 +81,7 @@ export async function withQueryLogging<T>(
  *   });
  *
  *   // All queries through loggedDb will be automatically logged
- *   const data = await loggedDb.select().from(table);
+ *   const listings = await loggedDb.select().from(listings);
  * }
  * ```
  */
@@ -116,21 +116,18 @@ export function createLoggedDb<TDatabase extends PgDatabase<any, any, any>>(
 			return original;
 		}
 	}) as TDatabase;
-}
-
-/**
+} /**
  * Helper for logging database transactions
  * Wraps Drizzle's db.transaction() with automatic logging
  *
  * @example
  * ```typescript
  * import { db } from '$lib/server/db';
- * import { logTransaction } from '$lib/server/logger/db';
  *
- * const result = await logTransaction(db, 'create_record_with_relations', async (tx) => {
- *   const record = await tx.insert(table).values(data).returning();
- *   await tx.insert(relatedTable).values(relatedData);
- *   return record;
+ * const result = await logTransaction(db, 'create_listing_with_images', async (tx) => {
+ *   const listing = await tx.insert(listings).values(data).returning();
+ *   await tx.insert(listingImages).values(images);
+ *   return listing;
  * }, { requestId, schema: 'app' });
  * ```
  */

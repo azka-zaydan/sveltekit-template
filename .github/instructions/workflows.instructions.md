@@ -5,18 +5,18 @@
 ## Local Setup
 
 ```bash
-cp .env.example .env              # DATABASE_URL="postgres://root:craigslist_dupe@localhost:5432/craigslist_dupe"
+cp .env.example .env              # DATABASE_URL="postgres://root:password@localhost:5432/project_db"
 docker compose up -d              # Start PostgreSQL
 npm run migrate:up                # Create all schemas + tables
-npm run seed:up                   # Insert demo data (10 users, 12 listings, etc.)
+npm run seed:up                   # Insert demo data
 npm run dev                       # Start dev server → http://localhost:5173
 ```
 
 ## Database Credentials (from compose.yaml)
 
 - User: `root`
-- Password: `craigslist_dupe`
-- Database: `craigslist_dupe`
+- Password: `password`
+- Database: `project_db`
 - Port: `5432`
 
 ## Quality Checks
@@ -195,7 +195,7 @@ git push origin feature/add-comments
 
 ```bash
 # Connect to database
-docker exec -it your-project-db psql -U root -d craigslist_dupe
+docker exec -it project-db psql -U root -d project_db
 
 # List schemas
 \dn
@@ -237,6 +237,6 @@ node build
 Required in `.env`:
 
 ```bash
-DATABASE_URL="postgres://root:craigslist_dupe@localhost:5432/craigslist_dupe"
+DATABASE_URL="postgres://root:password@localhost:5432/project_db"
 NODE_ENV="development"  # or "production"
 ```
